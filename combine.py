@@ -2,6 +2,14 @@ import streamlit as st
 import pandas as pd
 from string import ascii_uppercase
 
+@st.cache_data
+def load_excel_file(file):
+    return pd.ExcelFile(file)
+
+@st.cache_data
+def parse_excel_sheet(xl, sheet_name):
+    return xl.parse(sheet_name)
+
 def col_index_to_letter(index):
     result = ""
     while index >= 0:
@@ -18,9 +26,9 @@ with col1:
     st.header("📂 主文件")
     parent_file = st.file_uploader("上传主文件", type=["xlsx"], key="parent")
     if parent_file:
-        parent_xl = pd.ExcelFile(parent_file)
+        parent_xl = load_excel_file(parent_file)
         parent_sheet = st.selectbox("选择主文件的Sheet", parent_xl.sheet_names, key="parent_sheet")
-        parent_df = parent_xl.parse(parent_sheet)
+        parent_df = parse_excel_sheet(parent_xl, parent_sheet)
         # st.dataframe(parent_df)
         st.dataframe(parent_df.rename(columns={col: col_index_to_letter(i) for i, col in enumerate(parent_df.columns)}))
         # parent_column = st.selectbox("Select Parent Column", [col_index_to_letter(i) for i in range(len(parent_df.columns))], key="parent_column")
@@ -33,7 +41,7 @@ with col2:
     if child_files:
         selected_file = st.selectbox("选择一个子文件", [f.name for f in child_files], key="child_file")
         selected_file_obj = next(f for f in child_files if f.name == selected_file)
-        child_xl = pd.ExcelFile(selected_file_obj)
+        child_xl = load_excel_file(selected_file_obj)
         default_child_sheet = parent_sheet if parent_file and parent_sheet in child_xl.sheet_names else child_xl.sheet_names[0]
         child_sheet = st.selectbox(
             "选择子文件的Sheet",
@@ -41,7 +49,7 @@ with col2:
             index=child_xl.sheet_names.index(default_child_sheet),
             key="child_sheet"
         )
-        child_df = child_xl.parse(child_sheet)
+        child_df = parse_excel_sheet(child_xl, child_sheet)
         #  st.dataframe(child_df)
         st.dataframe(child_df.rename(columns={col: col_index_to_letter(i) for i, col in enumerate(child_df.columns)}))
         # child_column = st.selectbox("Select Child Column", [col_index_to_letter(i) for i in range(len(child_df.columns))], key="child_column")
@@ -66,8 +74,8 @@ if child_files and parent_file:
     results = []
 
     for file in child_files:
-        xl = pd.ExcelFile(file)
-        df = xl.parse(child_sheet)
+        xl = load_excel_file(file)
+        df = parse_excel_sheet(xl, child_sheet)
 
         for idx, row in df.iterrows():
             val = row.iloc[int(ord(child_value_col) - ord("A"))]
