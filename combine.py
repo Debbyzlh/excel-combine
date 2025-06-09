@@ -168,6 +168,6 @@ if child_files and parent_file:
                 file_name="extracted_key_value_pairs.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
-            st.info(f"💡 可在Excel中使用如下VLOOKUP公式填充主文件中的值：\n \n =IFERROR(VLOOKUP({parent_key_col}, [extracted_key_value_pairs.xlsx]Sheet1!B:C, 2, FALSE), '')")
+            st.info(f"💡 可在Excel中使用如下VLOOKUP公式填充主文件中的值：\n \n =IFERROR(VLOOKUP({parent_key_col}3, [extracted_key_value_pairs.xlsx]Sheet1!B:C, 2, FALSE), \" \")")
     else:
         st.info("没有找到非空的Key-Value对。")
