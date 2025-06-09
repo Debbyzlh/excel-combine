@@ -34,13 +34,32 @@ with col2:
         selected_file = st.selectbox("选择一个子文件", [f.name for f in child_files], key="child_file")
         selected_file_obj = next(f for f in child_files if f.name == selected_file)
         child_xl = pd.ExcelFile(selected_file_obj)
-        child_sheet = st.selectbox("选择子文件的Sheet", child_xl.sheet_names, key="child_sheet")
+        default_child_sheet = parent_sheet if parent_file and parent_sheet in child_xl.sheet_names else child_xl.sheet_names[0]
+        child_sheet = st.selectbox(
+            "选择子文件的Sheet",
+            child_xl.sheet_names,
+            index=child_xl.sheet_names.index(default_child_sheet),
+            key="child_sheet"
+        )
         child_df = child_xl.parse(child_sheet)
         #  st.dataframe(child_df)
         st.dataframe(child_df.rename(columns={col: col_index_to_letter(i) for i, col in enumerate(child_df.columns)}))
         # child_column = st.selectbox("Select Child Column", [col_index_to_letter(i) for i in range(len(child_df.columns))], key="child_column")
-        child_key_col = st.selectbox("选择子文件的Key列", [col_index_to_letter(i) for i in range(len(child_df.columns))], key="child_key")
-        child_value_col = st.selectbox("选择子文件的Value列", [col_index_to_letter(i) for i in range(len(child_df.columns))], key="child_value")
+        child_col_options = [col_index_to_letter(i) for i in range(len(child_df.columns))]
+        default_child_key = parent_key_col if 'parent_key_col' in locals() and parent_key_col in child_col_options else child_col_options[0]
+        default_child_value = parent_value_col if 'parent_value_col' in locals() and parent_value_col in child_col_options else child_col_options[0]
+        child_key_col = st.selectbox(
+            "选择子文件的Key列",
+            child_col_options,
+            index=child_col_options.index(default_child_key),
+            key="child_key"
+        )
+        child_value_col = st.selectbox(
+            "选择子文件的Value列",
+            child_col_options,
+            index=child_col_options.index(default_child_value),
+            key="child_value"
+        )
 
 if child_files and parent_file:
     st.subheader("📊 已提取的Key-Value对")
