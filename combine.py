@@ -160,14 +160,18 @@ if child_files and parent_file:
             import io
             extracted_df = pd.DataFrame(results)
             output = io.BytesIO()
+            # --- Begin: define custom file name ---
+            sheet_name_clean = child_sheet.replace(" ", "_")  # remove spaces for safety
+            extracted_file_name = f"extracted_{parent_file.name.replace('.xlsx', '')}_{sheet_name_clean}.xlsx"
+            # --- End: define custom file name ---
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
                 extracted_df.to_excel(writer, index=False)
             st.download_button(
                 label="📥 下载已提取的Key-Value对",
                 data=output.getvalue(),
-                file_name="extracted_key_value_pairs.xlsx",
+                file_name=extracted_file_name,
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
-            st.info(f"💡 可在Excel中使用如下VLOOKUP公式填充主文件中的值：\n \n =IFERROR(VLOOKUP({parent_key_col}3, [extracted_key_value_pairs.xlsx]Sheet1!B:C, 2, FALSE), \" \")")
+            st.info(f"💡 可在Excel中使用如下VLOOKUP公式填充主文件中的值：\n\n=IFERROR(VLOOKUP({parent_key_col}3, [{extracted_file_name}]Sheet1!B:C, 2, FALSE), \" \")")
     else:
         st.info("没有找到非空的Key-Value对。")
