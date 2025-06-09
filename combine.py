@@ -100,7 +100,7 @@ if child_files and parent_file:
 
         for idx, row in df.iterrows():
             val = row.iloc[int(ord(child_value_col) - ord("A"))]
-            if pd.notna(val) and val != "":
+            if pd.notna(val) and val != "" and val != 0 and not (isinstance(val, str) and val.strip() == "0"):
                 key = row.iloc[int(ord(child_key_col) - ord("A"))]
                 results.append({"文件": file.name, "Key": key, "Value": val})
 
@@ -156,7 +156,7 @@ if child_files and parent_file:
                     filled_count += 1
 
         if filled_count:
-            st.success(f"✅ 在主文件中填充了 {filled_count} 个值。")
+            st.success(f"✅ 抓取了 {filled_count} 个可对应的值。")
             import io
             extracted_df = pd.DataFrame(results)
             output = io.BytesIO()
