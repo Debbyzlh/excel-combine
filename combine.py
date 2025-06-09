@@ -19,28 +19,28 @@ with col1:
     parent_file = st.file_uploader("上传主文件", type=["xlsx"], key="parent")
     if parent_file:
         parent_xl = pd.ExcelFile(parent_file)
-        parent_sheet = st.selectbox("Select Parent Sheet", parent_xl.sheet_names, key="parent_sheet")
+        parent_sheet = st.selectbox("选择主文件的Sheet", parent_xl.sheet_names, key="parent_sheet")
         parent_df = parent_xl.parse(parent_sheet)
         # st.dataframe(parent_df)
         st.dataframe(parent_df.rename(columns={col: col_index_to_letter(i) for i, col in enumerate(parent_df.columns)}))
         # parent_column = st.selectbox("Select Parent Column", [col_index_to_letter(i) for i in range(len(parent_df.columns))], key="parent_column")
-        parent_key_col = st.selectbox("Select Parent Key Column", [col_index_to_letter(i) for i in range(len(parent_df.columns))], key="parent_key")
-        parent_value_col = st.selectbox("Select Parent Value Column", [col_index_to_letter(i) for i in range(len(parent_df.columns))], key="parent_value")
+        parent_key_col = st.selectbox("选择主文件的Key列", [col_index_to_letter(i) for i in range(len(parent_df.columns))], key="parent_key")
+        parent_value_col = st.selectbox("选择主文件的Value列", [col_index_to_letter(i) for i in range(len(parent_df.columns))], key="parent_value")
 
 with col2:
     st.header("📂 子文件")
     child_files = st.file_uploader("上传子文件", type=["xlsx"], accept_multiple_files=True, key="child")
     if child_files:
-        selected_file = st.selectbox("Select One Child File to Preview", [f.name for f in child_files], key="child_file")
+        selected_file = st.selectbox("选择一个子文件", [f.name for f in child_files], key="child_file")
         selected_file_obj = next(f for f in child_files if f.name == selected_file)
         child_xl = pd.ExcelFile(selected_file_obj)
-        child_sheet = st.selectbox("Select Child Sheet", child_xl.sheet_names, key="child_sheet")
+        child_sheet = st.selectbox("选择子文件的Sheet", child_xl.sheet_names, key="child_sheet")
         child_df = child_xl.parse(child_sheet)
         #  st.dataframe(child_df)
         st.dataframe(child_df.rename(columns={col: col_index_to_letter(i) for i, col in enumerate(child_df.columns)}))
         # child_column = st.selectbox("Select Child Column", [col_index_to_letter(i) for i in range(len(child_df.columns))], key="child_column")
-        child_key_col = st.selectbox("Select Child Key Column", [col_index_to_letter(i) for i in range(len(child_df.columns))], key="child_key")
-        child_value_col = st.selectbox("Select Child Value Column", [col_index_to_letter(i) for i in range(len(child_df.columns))], key="child_value")
+        child_key_col = st.selectbox("选择子文件的Key列", [col_index_to_letter(i) for i in range(len(child_df.columns))], key="child_key")
+        child_value_col = st.selectbox("选择子文件的Value列", [col_index_to_letter(i) for i in range(len(child_df.columns))], key="child_value")
 
 if child_files and parent_file:
     st.subheader("📊 已提取的Key-Value对")
@@ -54,7 +54,7 @@ if child_files and parent_file:
             val = row.iloc[int(ord(child_value_col) - ord("A"))]
             if pd.notna(val) and val != "":
                 key = row.iloc[int(ord(child_key_col) - ord("A"))]
-                results.append({"File": file.name, "Key": key, "Value": val})
+                results.append({"文件": file.name, "Key": key, "Value": val})
 
     if results:
         st.dataframe(pd.DataFrame(results))
@@ -90,7 +90,7 @@ if child_files and parent_file:
         if duplicates:
             st.warning("⚠️ 多个值找到相同的Key:")
             for k, vals in duplicates.items():
-                st.text(f"Key: {k} | Conflicting values: {', '.join(map(str, vals))}")
+                st.text(f"Key: {k} | 冲突的 Value: {', '.join(map(str, vals))}")
 
         if new_keys:
             st.warning("⚠️ 子文件中的某些Key不存在于主文件中，请手动检查:")
