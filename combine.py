@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from string import ascii_uppercase
+import time
 
 @st.cache_resource
 def load_excel_file_from_bytes(file_bytes):
@@ -27,9 +28,18 @@ with col1:
     st.header("📂 主文件")
     parent_file = st.file_uploader("上传主文件", type=["xlsx"], key="parent")
     if parent_file:
-        parent_xl = load_excel_file_from_bytes(parent_file.getvalue())
+        start = time.time()
+        st.write("📥 正在读取文件字节...")
+        parent_bytes = parent_file.getvalue()
+        st.write(f"✅ 文件读取完成，用时 {time.time() - start:.2f} 秒")
+
+        start = time.time()
+        st.write("🔍 正在解析 ExcelFile...")
+        parent_xl = load_excel_file_from_bytes(parent_bytes)
+        st.write(f"✅ ExcelFile 解析完成，用时 {time.time() - start:.2f} 秒")
+
         parent_sheet = st.selectbox("选择主文件的Sheet", parent_xl.sheet_names, key="parent_sheet")
-        parent_df = parse_excel_sheet_from_bytes(parent_file.getvalue(), parent_sheet)
+        parent_df = parse_excel_sheet_from_bytes(parent_bytes, parent_sheet)
         # st.dataframe(parent_df)
         st.dataframe(parent_df.rename(columns={col: col_index_to_letter(i) for i, col in enumerate(parent_df.columns)}))
         # parent_column = st.selectbox("Select Parent Column", [col_index_to_letter(i) for i in range(len(parent_df.columns))], key="parent_column")
@@ -42,7 +52,17 @@ with col2:
     if child_files:
         selected_file = st.selectbox("选择一个子文件", [f.name for f in child_files], key="child_file")
         selected_file_obj = next(f for f in child_files if f.name == selected_file)
-        child_xl = load_excel_file_from_bytes(selected_file_obj.getvalue())
+
+        start = time.time()
+        st.write("📥 正在读取子文件字节...")
+        child_bytes = selected_file_obj.getvalue()
+        st.write(f"✅ 子文件读取完成，用时 {time.time() - start:.2f} 秒")
+
+        start = time.time()
+        st.write("🔍 正在解析子文件 ExcelFile...")
+        child_xl = load_excel_file_from_bytes(child_bytes)
+        st.write(f"✅ 子文件解析完成，用时 {time.time() - start:.2f} 秒")
+
         default_child_sheet = parent_sheet if parent_file and parent_sheet in child_xl.sheet_names else child_xl.sheet_names[0]
         child_sheet = st.selectbox(
             "选择子文件的Sheet",
@@ -50,7 +70,7 @@ with col2:
             index=child_xl.sheet_names.index(default_child_sheet),
             key="child_sheet"
         )
-        child_df = parse_excel_sheet_from_bytes(selected_file_obj.getvalue(), child_sheet)
+        child_df = parse_excel_sheet_from_bytes(child_bytes, child_sheet)
         #  st.dataframe(child_df)
         st.dataframe(child_df.rename(columns={col: col_index_to_letter(i) for i, col in enumerate(child_df.columns)}))
         # child_column = st.selectbox("Select Child Column", [col_index_to_letter(i) for i in range(len(child_df.columns))], key="child_column")
@@ -148,6 +168,6 @@ if child_files and parent_file:
                 file_name="extracted_key_value_pairs.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
-            st.info(f"💡 可在Excel中使用如下VLOOKUP公式填充主文件中的值：\n \n =IFERROR(VLOOKUP({parent_key_col}, [extracted_key_value_pairs.xlsx]Sheet1!B:C, 2, FALSE), "")
+            st.info(f"💡 可在Excel中使用如下VLOOKUP公式填充主文件中的值：\n \n =IFERROR(VLOOKUP({parent_key_col}, [extracted_key_value_pairs.xlsx]Sheet1!B:C, 2, FALSE), '')")
     else:
         st.info("没有找到非空的Key-Value对。")
