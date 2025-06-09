@@ -29,14 +29,14 @@ with col1:
     parent_file = st.file_uploader("上传主文件", type=["xlsx"], key="parent")
     if parent_file:
         start = time.time()
-        st.write("📥 正在读取文件字节...")
+        # st.write("📥 正在读取文件字节...")
         parent_bytes = parent_file.getvalue()
-        st.write(f"✅ 文件读取完成，用时 {time.time() - start:.2f} 秒")
+        # st.write(f"✅ 文件读取完成，用时 {time.time() - start:.2f} 秒")
 
         start = time.time()
-        st.write("🔍 正在解析 ExcelFile...")
+        # st.write("🔍 正在解析 ExcelFile...")
         parent_xl = load_excel_file_from_bytes(parent_bytes)
-        st.write(f"✅ ExcelFile 解析完成，用时 {time.time() - start:.2f} 秒")
+        # st.write(f"✅ ExcelFile 解析完成，用时 {time.time() - start:.2f} 秒")
 
         parent_sheet = st.selectbox("选择主文件的Sheet", parent_xl.sheet_names, key="parent_sheet")
         parent_df = parse_excel_sheet_from_bytes(parent_bytes, parent_sheet)
@@ -54,14 +54,14 @@ with col2:
         selected_file_obj = next(f for f in child_files if f.name == selected_file)
 
         start = time.time()
-        st.write("📥 正在读取子文件字节...")
+        # st.write("📥 正在读取子文件字节...")
         child_bytes = selected_file_obj.getvalue()
-        st.write(f"✅ 子文件读取完成，用时 {time.time() - start:.2f} 秒")
+        # st.write(f"✅ 子文件读取完成，用时 {time.time() - start:.2f} 秒")
 
         start = time.time()
-        st.write("🔍 正在解析子文件 ExcelFile...")
+        # st.write("🔍 正在解析子文件 ExcelFile...")
         child_xl = load_excel_file_from_bytes(child_bytes)
-        st.write(f"✅ 子文件解析完成，用时 {time.time() - start:.2f} 秒")
+        # st.write(f"✅ 子文件解析完成，用时 {time.time() - start:.2f} 秒")
 
         default_child_sheet = parent_sheet if parent_file and parent_sheet in child_xl.sheet_names else child_xl.sheet_names[0]
         child_sheet = st.selectbox(
@@ -133,7 +133,7 @@ if child_files and parent_file:
                     duplicates.setdefault(k, set()).add(parent_kv_map[k])
                     duplicates[k].add(v)
             else:
-                new_keys.append((k, v))
+                new_keys.append((k, v, item["文件"]))
 
         if duplicates:
             st.warning("⚠️ 多个值找到相同的Key:")
@@ -142,8 +142,8 @@ if child_files and parent_file:
 
         if new_keys:
             st.warning("⚠️ 子文件中的某些Key不存在于主文件中，请手动检查:")
-            for k, _ in new_keys:
-                st.text(f"- {k}")
+            for k, _, source_file in new_keys:
+                st.text(f"- {k}（来源文件: {source_file}）")
         # --- End new logic ---
         # Fill in missing values in parent_data from results
         filled_count = 0
@@ -160,18 +160,14 @@ if child_files and parent_file:
             import io
             extracted_df = pd.DataFrame(results)
             output = io.BytesIO()
-            # --- Begin: define custom file name ---
-            sheet_name_clean = child_sheet.replace(" ", "_")  # remove spaces for safety
-            extracted_file_name = f"extracted_{parent_file.name.replace('.xlsx', '')}_{sheet_name_clean}.xlsx"
-            # --- End: define custom file name ---
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
                 extracted_df.to_excel(writer, index=False)
             st.download_button(
                 label="📥 下载已提取的Key-Value对",
                 data=output.getvalue(),
-                file_name=extracted_file_name,
+                file_name="extracted_pairs.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
-            st.info(f"💡 可在Excel中使用如下VLOOKUP公式填充主文件中的值：\n\n=IFERROR(VLOOKUP({parent_key_col}3, [{extracted_file_name}]Sheet1!B:C, 2, FALSE), \" \")")
+            st.info(f"💡 可在Excel中使用如下VLOOKUP公式填充主文件中的值：\n\n=IFERROR(VLOOKUP({parent_key_col}3, [extracted_pairs.xlsx]Sheet1!B:C, 2, FALSE), \" \")")
     else:
         st.info("没有找到非空的Key-Value对。")
